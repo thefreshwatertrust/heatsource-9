@@ -39,10 +39,10 @@ import argparse
 from time import time as Time
 
 # set up logging
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    filename='heatsource.log',
-                    filemode='w')
+#logging.basicConfig(level=logging.INFO,
+#                    format='%(asctime)s %(levelname)-8s %(message)s',
+#                    filename='heatsource.log',
+#                    filemode='w')
 logger = logging.getLogger(__name__)
 
 

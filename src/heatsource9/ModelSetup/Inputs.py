@@ -29,10 +29,10 @@ from ..Utils.Printer import Printer as print_console
 import logging
 
 # set up logging
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    filename='heatsource.log',
-                    filemode='w')
+#logging.basicConfig(level=logging.DEBUG,
+#                    format='%(asctime)s %(levelname)-8s %(message)s',
+#                    filename='heatsource.log',
+#                    filemode='w')
 logger = logging.getLogger(__name__)
 
 
