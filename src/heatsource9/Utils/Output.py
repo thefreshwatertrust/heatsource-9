@@ -110,6 +110,7 @@ class Output(object):
         self.empty_vars = deepcopy(self.data)
         # Empty dictionary to store file objects
         self.files = {}
+        self.file_hs = {}
 
         # Here we build up the self.files attribute by cycling through 
         # the filenames and descriptions
@@ -153,8 +154,10 @@ class Output(object):
 
             # Now create a file object in the dictionary, and write 
             # the header
-            self.files[key] = csv.writer(open(join(IniParams["outputdir"], key + ".csv"), "w", newline=""))
+            self.file_hs[key] = open(join(IniParams["outputdir"], key + ".csv"), "w", newline="")
+            self.files[key] = csv.writer(self.file_hs[key])
             self.files[key].writerows(header)
+            self.file_hs[key].flush()
 
     def __call__(self, time, hour, minute=0, second=0):
         """Call the storage method with a time and an hour"""
@@ -283,6 +286,7 @@ class Output(object):
 
             # finally, write all the lines to the file
             fileobj.writerows(line)
+            self.file_hs[name].flush()
         del data
         # Now empty out the dictionary by simply copying a new one.
         self.data = deepcopy(self.empty_vars)
