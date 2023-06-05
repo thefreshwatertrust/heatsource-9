@@ -254,7 +254,7 @@ class ModelControl(object):
         print_console(message)
         # raw_input('Press <ENTER> to close this console')
 
-        for fh in self.Output.files.values():
+        for fh in self.Output.file_hs.values():
             fh.close()
 
     #############################################################
