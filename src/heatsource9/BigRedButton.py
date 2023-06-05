@@ -254,6 +254,9 @@ class ModelControl(object):
         print_console(message)
         # raw_input('Press <ENTER> to close this console')
 
+        for fh in self.Output.files.values():
+            fh.close()
+
     #############################################################
     # Three different versions of the run() routine, depending on the 
     # run_type.
