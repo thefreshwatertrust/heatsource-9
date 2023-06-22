@@ -398,7 +398,7 @@ class ModelSetup(object):
 
         metdata = self.inputs.import_met()
 
-        data = [tuple(zip(line[0:None:4], line[1:None:4], line[2:None:4], line[3:None:4])) for line in metdata]
+        data = [tuple(zip(line[0:None:4], line[1:None:4], line[2:None:4], line[3:None:4], line[4:None:4])) for line in metdata]
 
         # Get a tuple of kilometers to use as keys to the location of 
         # each met node
@@ -409,7 +409,7 @@ class ModelSetup(object):
         for time in timelist:
             line = data.pop(0)
             c = count()
-            for cloud, wind, humidity, T_air in line:
+            for cloud, wind, humidity, T_air, canopy_density in line:
                 i = next(c)
                 
                 # Index by kilometer
@@ -423,6 +423,12 @@ class ModelSetup(object):
                     cloud = 0.0
                 if wind is None:
                     wind = 0.0
+                if canopy_density is None:
+                    canopy_density = 1.0
+                elif canopy_density < 0.0 or canopy_density > 1.0:
+                    raise Exception(
+                            "Canopy density (value of '%s' in Meteorological Data) must be greater than zero and less than one" 
+                            % canopy_density)
                 if cloud < 0 or cloud > 1:
                     # Alright in shade-a-lator 
                     # # TODO zeros should not get a passed in 
@@ -448,7 +454,7 @@ class ModelSetup(object):
                         raise Exception(
                             "Air temperature input (value of '%s' in Meteorological Data) outside of world records, "
                             "-89 to 58 deg C." % T_air)
-                node.metData[time] = cloud, wind, humidity, T_air
+                node.metData[time] = cloud, wind, humidity, T_air, canopy_density
 
             msg = "Reading meteorological data"
             current = next(tm) + 1

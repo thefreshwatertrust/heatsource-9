@@ -341,6 +341,25 @@ def setup_mi(model_dir, control_file, use_timestamp=False, overwrite=False):
         logging.error(msg)
         print_console(msg)
 
+def setup_mi_dataframes(model_dir, control_file, use_timestamp=False):
+    """Return blank input dataframes. Control file must already be parameterized."""
+    try:
+        # create an input object
+        inputs = Inputs(model_dir, control_file)
+
+        # Control file must already be parameterized
+        inputs.import_control_file()
+        
+        # Write blank input files,
+        dfs = inputs.setup_dataframes()
+
+    except:
+        msg = "Error: {0}".format(traceback.format_exc())
+        logging.error(msg)
+        print_console(msg)
+
+    return dfs
+
 
 def hs():
     """Entry point to run Heat Source from command line."""

@@ -380,7 +380,8 @@ def get_solar_flux(hour, JD, Altitude, Zenith, cloud, d_w, W_b, elevation,
                 if BeersData == "LAI":
                     
                     # use LAI and k to calculate the riparian extinction value
-                    RipExtinction = lc_canopy[tran][s] * lc_k[tran][s] / lc_height[tran][s]
+                    RipExtinction = lc_canopy * lc_k[tran][s] / lc_height[tran][s]
+                    #RipExtinction = lc_canopy[tran][s] * lc_k[tran][s] / lc_height[tran][s]
                     fraction_passed = exp(-1 * RipExtinction * PLz)
                     
                 else:
@@ -395,15 +396,18 @@ def get_solar_flux(hour, JD, Altitude, Zenith, cloud, d_w, W_b, elevation,
                         PL = lc_height[tran][s]
                     
                     try:
-                        RipExtinction = -log(1- lc_canopy[tran][s]) / PL
+                        RipExtinction = -log(1- lc_canopy) / PL
+                        #RipExtinction = -log(1- lc_canopy[tran][s]) / PL
                         fraction_passed = exp(-1* RipExtinction * PLz)
                     except:
-                        if (lc_canopy[tran][s] >= 1 or PL <= 0):
+                        #if (lc_canopy[tran][s] >= 1 or PL <= 0):
+                        if (lc_canopy >= 1 or PL <= 0):
                             # can't take log or divide by zero
                             fraction_passed = 0
                         else:
                             # some other error
-                            msg="Unknown error when calculating riparian extinction value. transect={0} s={1} relative height={2} canopy={3} PLz={4} PL={5} Altitude={6} VegetationAngle1={7} ".format(tran,s,lc_height_rel[tran][s],lc_canopy[tran][s],PLz,PL, Altitude, VegetationAngle1[s])
+                            msg="Unknown error when calculating riparian extinction value. transect={0} s={1} relative height={2} canopy={3} PLz={4} PL={5} Altitude={6} VegetationAngle1={7} ".format(tran,s,lc_height_rel[tran][s],lc_canopy,PLz,PL, Altitude, VegetationAngle1[s])
+                            #msg="Unknown error when calculating riparian extinction value. transect={0} s={1} relative height={2} canopy={3} PLz={4} PL={5} Altitude={6} VegetationAngle1={7} ".format(tran,s,lc_height_rel[tran][s],lc_canopy[tran][s],PLz,PL, Altitude, VegetationAngle1[s])
                             logger.error(msg)
                             print_console(msg)
                             raise
@@ -432,7 +436,8 @@ def get_solar_flux(hour, JD, Altitude, Zenith, cloud, d_w, W_b, elevation,
 
     if emergent:
         # Account for emergent vegetation
-        if (lc_height_rel[0][0] <= 0) or (lc_canopy[0][0] == 0):
+        #if (lc_height_rel[0][0] <= 0) or (lc_canopy[0][0] == 0):
+        if (lc_height_rel[0][0] <= 0) or (lc_canopy == 0):
             # Set to one if no veg or no canopy
             fraction_passed = 1
     
@@ -463,23 +468,27 @@ def get_solar_flux(hour, JD, Altitude, Zenith, cloud, d_w, W_b, elevation,
                 
             if BeersData == "LAI":
                 # use LAI and k to calculate the riparian extinction value
-                RipExtinction = lc_canopy[0][0] * lc_k[0][0] / lc_height[0][0]
+                RipExtinction = lc_canopy * lc_k[0][0] / lc_height[0][0]
+                #RipExtinction = lc_canopy[0][0] * lc_k[0][0] / lc_height[0][0]
                 fraction_passed = exp(-1 * RipExtinction * PLe)
                 
             else:
                 try:
                     # Use canopy cover to calculate 
                     # the riparian extinction value
-                    RipExtinction = -log(1- lc_canopy[0][0]) / lc_height[0][0]
+                    RipExtinction = -log(1- lc_canopy) / lc_height[0][0]
+                    #RipExtinction = -log(1- lc_canopy[0][0]) / lc_height[0][0]
                     fraction_passed = exp(-1* RipExtinction * PLe)
                     
                 except:
-                    if lc_canopy[0][0] >= 1:
+                    #if lc_canopy[0][0] >= 1:
+                    if lc_canopy >= 1:
                         # can't take log of zero
                         fraction_passed = 0
                     else:
                         # some other error
-                        msg="Unknown error when calculating emergent riparian extinction value. canopy={0} PLe={1} ".format(lc_canopy[0][0],PLe)
+                        msg="Unknown error when calculating emergent riparian extinction value. canopy={0} PLe={1} ".format(lc_canopy,PLe)
+                        #msg="Unknown error when calculating emergent riparian extinction value. canopy={0} PLe={1} ".format(lc_canopy[0][0],PLe)
                         logger.error(msg)
                         print_console(msg)
                         raise Exception
@@ -801,13 +810,15 @@ def calc_heat_fluxes(metData, C_args, d_w, area, P_w, W_w, U, Q_tribs,
                    Q_up_prev, T_up_prev, solar_only, MixTDelta_dn_prev,
                    heatsource8):
     
-    cloud, wind, humidity, T_air = metData
+    cloud, wind, humidity, T_air, canopy_density = metData
 
     W_b, elevation, TopoFactor, ViewToSky, phi, lc_canopy, lc_height, \
         lc_height_rel, lc_k, SedDepth, dx, dt, SedThermCond, SedThermDiff, Q_accr, \
         T_accr, has_prev, transsample_distance, transsample_count, \
         BeersData, emergent, wind_a, wind_b, calcevap, penman, \
         calcalluv, T_alluv = C_args
+
+    lc_canopy = canopy_density
 
     solar = [0]*8
     diffuse = [0]*8

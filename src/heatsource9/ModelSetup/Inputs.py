@@ -11,6 +11,7 @@ from os import makedirs
 from os.path import exists
 from os.path import isfile
 from os.path import join
+from os.path import splitext, split
 from math import ceil
 from time import gmtime
 from time import strptime
@@ -20,6 +21,7 @@ from collections import defaultdict
 from calendar import timegm
 from datetime import datetime
 from operator import itemgetter
+import pandas as pd
 
 from ..Dieties.IniParamsDiety import IniParams
 from ..Dieties.IniParamsDiety import iniRange
@@ -117,6 +119,7 @@ class Inputs(object):
             header.append("WIND_SPEED" + str(n))
             header.append("RELATIVE_HUMIDITY" + str(n))
             header.append("AIR_TEMPERATURE" + str(n))
+            header.append("CANOPY_DENSITY" + str(n))
         return header
 
     def headers_lcdata(self):
@@ -777,6 +780,45 @@ class Inputs(object):
             i = i + 1
         return data
 
+    def setup_dataframes(self):
+        """
+        Returns blank input dataframes based on settings in the control file
+        """
+
+        timelist = self.datetime_string()
+        kmlist = self.stream_kms()
+        node_ids = list(reversed(range(len(kmlist))))
+
+        # For inflow and met data there can be a single input 
+        # file for each node OR just one input file with multiple 
+        # nodes in the file, This creates a list of the trib 
+        # and met file names if there is more than one   
+        if IniParams["inflowsites"] > 0:
+            tribfiles = IniParams["inflowinfiles"].split(",")
+        metfiles = IniParams["metfiles"].split(",")
+
+        acclist = [[IniParams['name'], nid, km] + [None] * 3 for km,nid in zip(kmlist,node_ids)]
+        accdf = pd.DataFrame(acclist, columns=self.headers_accretion())
+        morphlist = [[IniParams['name'], nid, km] + [None] * 10 for km,nid in zip(kmlist,node_ids)]
+        morphdf = pd.DataFrame(morphlist, columns=self.headers_morph())
+        bclist = [[t, None, None] for t in timelist]
+        bcdf = pd.DataFrame(bclist, columns=self.headers_bc())
+
+        dfs = {'accretion': accdf, 'bc': bcdf, 'morph': morphdf}
+
+        for file in metfiles:
+            metlist = [[t] + [None] * 5 * int((IniParams["metsites"] // len(metfiles))) for t in timelist]
+            dfs[splitext(split(file)[-1])[0]] = pd.DataFrame(metlist, columns=self.headers_met())
+
+        inflowdfs = []
+        if IniParams["inflowsites"] > 0:
+            tribfiles = IniParams["inflowinfiles"].split(",")
+            for file in tribfiles:
+                inflowlist = [[t] + [None] * 2 * int((IniParams["inflowsites"] // len(tribfiles))) for t in timelist]
+                dfs[splitext(split(file)[-1])[0]] = pd.DataFrame(inflowlist, columns=self.headers_inflow())
+
+        return dfs
+
     def setup_csv(self, use_timestamp=True, overwrite=True):
         """
         Writes blank input csv files based on settings in the control file
@@ -881,7 +923,7 @@ class Inputs(object):
                                   morphlist, self.headers_morph())
 
         for file in metfiles:
-            metlist = [[t] + [None] * 4 * int((IniParams["metsites"] // len(metfiles))) for t in timelist]
+            metlist = [[t] + [None] * 5 * int((IniParams["metsites"] // len(metfiles))) for t in timelist]
 
             if use_timestamp:
                 met_filename = timestamp + file.strip()
