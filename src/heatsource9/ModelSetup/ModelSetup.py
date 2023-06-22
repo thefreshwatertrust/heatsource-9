@@ -423,11 +423,11 @@ class ModelSetup(object):
                     cloud = 0.0
                 if wind is None:
                     wind = 0.0
-                if canopy_density is None:
-                    canopy_density = 1.0
-                elif canopy_density < 0.0 or canopy_density > 1.0:
+                if canopy_density is None or canopy_density<=0.0:
+                    canopy_density = 0.75
+                elif canopy_density <= 0.0 or canopy_density > 1.0:
                     raise Exception(
-                            "Canopy density (value of '%s' in Meteorological Data) must be greater than zero and less than one" 
+                            "Canopy density (value of '%s' in Meteorological Data) must be greater than zero and less than or equal to one" 
                             % canopy_density)
                 if cloud < 0 or cloud > 1:
                     # Alright in shade-a-lator 
