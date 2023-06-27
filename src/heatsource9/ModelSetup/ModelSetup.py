@@ -398,7 +398,7 @@ class ModelSetup(object):
 
         metdata = self.inputs.import_met()
 
-        data = [tuple(zip(line[0:None:4], line[1:None:4], line[2:None:4], line[3:None:4], line[4:None:4])) for line in metdata]
+        data = [tuple(zip(line[0:None:5], line[1:None:5], line[2:None:5], line[3:None:5], line[4:None:5])) for line in metdata]
 
         # Get a tuple of kilometers to use as keys to the location of 
         # each met node
