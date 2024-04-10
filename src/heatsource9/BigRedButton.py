@@ -357,6 +357,7 @@ def setup_mi_dataframes(model_dir, control_file, use_timestamp=False):
         msg = "Error: {0}".format(traceback.format_exc())
         logging.error(msg)
         print_console(msg)
+        raise
 
     return dfs
 
