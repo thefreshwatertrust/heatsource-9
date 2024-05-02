@@ -41,20 +41,21 @@ class ModelSetup(object):
     StreamNode instances from the input data.
     """
 
-    def __init__(self, model_dir, control_file, run_type=0):
+    def __init__(self, model_dir, control_file, run_type=0, verbose=True):
         self.run_type = run_type
         self.reach = {}
         self.ID2km = {}
 
         msg = "Starting Model Initialization"
         logger.info(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
 
         # create an input object to mange the data
-        self.inputs = Inputs(model_dir, control_file)
+        self.inputs = Inputs(model_dir, control_file, verbose=verbose)
 
         # read control file and parameterize IniParams
-        self.inputs.import_control_file()
+        self.inputs.import_control_file(verbose=verbose)
 
         # Make empty Dictionaries for the boundary conditions
 
@@ -78,15 +79,15 @@ class ModelSetup(object):
 
         # Start through the steps of building a reach 
         # full of StreamNodes
-        self.get_boundary_conditions()
-        self.build_nodes()
+        self.get_boundary_conditions(verbose=verbose)
+        self.build_nodes(verbose=verbose)
         if IniParams["lcdatainput"] == "Values":
-            self.build_zones_w_values()
+            self.build_zones_w_values(verbose=verbose)
         else:
-            self.build_zones_w_codes()
-        self.get_tributary_data()
-        self.get_met_data()
-        self.set_atmospheric_data()
+            self.build_zones_w_codes(verbose=verbose)
+        self.get_tributary_data(verbose=verbose)
+        self.get_met_data(verbose=verbose)
+        self.set_atmospheric_data(verbose=verbose)
         self.orient_nodes()
 
         # setup output km
@@ -95,7 +96,8 @@ class ModelSetup(object):
 
         msg = "Model Initialization Complete"
         logger.info(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
 
     def orient_nodes(self):
         # Now we manually set each nodes next and previous 
@@ -137,9 +139,10 @@ class ModelSetup(object):
                 raise Exception("The following reaches have zero slope. Kilometers: %s" % ",".join(
                     ['%0.3f' % i for i in slope_problems]))
 
-    def set_atmospheric_data(self):
+    def set_atmospheric_data(self, verbose=True):
         """For each node without met data, use closest (up or downstream) node's data"""
-        print_console("Assigning Meteorological Data to Nodes")
+        if verbose:
+            print_console("Assigning Meteorological Data to Nodes")
 
         # Localize the variable for speed
         sites = self.metDataSites
@@ -179,12 +182,14 @@ class ModelSetup(object):
             msg = "Assigning Node"
             current = next(c)+1
             logger.info('{0} {1} {2}'.format(msg, True, current, len(l)))
-            print_console(msg, True, current, len(l))
+            if verbose:
+                print_console(msg, True, current, len(l))
 
-    def get_boundary_conditions(self):
+    def get_boundary_conditions(self, verbose=True):
         """Get the boundary conditions"""
         # Get the columns, which is faster than accessing cells
-        print_console("Reading boundary conditions")
+        if verbose:
+            print_console("Reading boundary conditions")
         timelist = self.continuoustimelist
 
         # the data block is a tuple of tuples, each corresponding 
@@ -216,7 +221,8 @@ class ModelSetup(object):
             msg = "Reading boundary conditions"
             current = next(c)+1
             logger.info('{0} {1} {2}'.format(msg, current, length))
-            print_console(msg, True, current, length)
+            if verbose:
+                print_console(msg, True, current, length)
 
         # Next we expand or revise the dictionary to account for the 
         # flush period
@@ -306,10 +312,11 @@ class ModelSetup(object):
             flushtime += 3600
         return tuple(flushtimelist)
 
-    def get_tributary_data(self):
+    def get_tributary_data(self, verbose=True):
         """Populate the tributary flow and temperature values for
         nodes from the Flow Data page"""
-        print_console("Reading inflow data")
+        if verbose:
+            print_console("Reading inflow data")
         # Get a list of the timestamps that we have data for, and use 
         # that to grab the data block
         timelist = self.flowtimelist
@@ -361,7 +368,8 @@ class ModelSetup(object):
                     msg = "Reading inflow data"
                     current = next(tm) + 1
                     logger.info('{0} {1} {2}'.format(msg, current, length * IniParams["inflowsites"]))
-                    print_console(msg, True, current, length * IniParams["inflowsites"])
+                    if verbose:
+                        print_console(msg, True, current, length * IniParams["inflowsites"])
 
         # Next we expand or revise the dictionary to account for the 
         # flush period
@@ -388,11 +396,12 @@ class ModelSetup(object):
             node.Q_tribs = node.Q_tribs.view(IniParams["flushtimestart"], IniParams["modelend"], aft=1)
             node.T_tribs = node.T_tribs.view(IniParams["flushtimestart"], IniParams["modelend"], aft=1)
 
-    def get_met_data(self):
+    def get_met_data(self, verbose=True):
         """Get data from the input met data csv file"""
         # This is remarkably similar to GetInflowData. We get a block 
         # of data, then set the dictionary of the node
-        print_console("Reading meteorological data")
+        if verbose:
+            print_console("Reading meteorological data")
 
         timelist = self.continuoustimelist
 
@@ -459,7 +468,8 @@ class ModelSetup(object):
             msg = "Reading meteorological data"
             current = next(tm) + 1
             logger.info('{0} {1} {2}'.format(msg, current, length))
-            print_console(msg, True, current, length)
+            if verbose:
+                print_console(msg, True, current, length)
 
         # Flush meteorology: first 24 hours repeated over flush period
         first_day_time = IniParams["modelstart"]
@@ -485,7 +495,8 @@ class ModelSetup(object):
             msg = "Subsetting met data"
             current = next(tm)+1
             logger.info('{0} {1} {2}'.format(msg, current, length))
-            print_console(msg, True, current, length)
+            if verbose:
+                print_console(msg, True, current, length)
 
     def zipper(self, iterable, mul=2):
         """Zippify list by grouping <mul> consecutive elements together
@@ -626,9 +637,10 @@ class ModelSetup(object):
             data[attr] = self.multiplier(data[attr], lambda x: min(x))
         return data
 
-    def build_nodes(self):
+    def build_nodes(self, verbose=True):
         # This is the worst of the methods but it works. # TODO
-        print_console("Building Stream Nodes")
+        if verbose:
+            print_console("Building Stream Nodes")
         Q_mb = 0.0
 
         # Grab all of the data in a dictionary
@@ -664,7 +676,8 @@ class ModelSetup(object):
             self.ID2km[node.nodeID] = node.km
             msg = "Building Stream Nodes"
             logger.debug('{0} {1} {2}'.format(msg, i + 1, num_nodes))
-            print_console(msg, True, i + 1, num_nodes)
+            if verbose:
+                print_console(msg, True, i + 1, num_nodes)
 
         # Find the mouth node and calculate the actual distance
         mouth = self.reach[min(self.reach.keys())]
@@ -673,7 +686,7 @@ class ModelSetup(object):
         mouth_dx = (vars) % self.multiple or 1.0
         mouth.dx = IniParams["longsample"] * mouth_dx
 
-    def build_zones_w_codes(self):
+    def build_zones_w_codes(self, verbose=True):
         """Build zones when the landcover data files contains
         vegetation codes"""
 
@@ -697,7 +710,8 @@ class ModelSetup(object):
         overhang = []
         elevation = []
 
-        print_console("Translating landcover Data")
+        if verbose:
+            print_console("Translating landcover Data")
         if IniParams["canopy_data"] == "LAI":
             # -------------------------------------------------------------
             # using LAI data
@@ -993,7 +1007,7 @@ class ModelSetup(object):
                 node.ShaderList += (max(t_full), elevation_list[i], max(t_none), t_full, t_path),
             node.ViewToSky = 1 - vts_total / (radial_count * 90)
 
-    def build_zones_w_values(self):
+    def build_zones_w_values(self, verbose=True):
         """Build zones when the landcover data files contains explicit
         vegetation data instead of codes"""
 
@@ -1014,7 +1028,8 @@ class ModelSetup(object):
         overhang = []
         elevation = []
 
-        print_console("Translating Land Cover Data")
+        if verbose:
+            print_console("Translating Land Cover Data")
         if IniParams["canopy_data"] == "LAI":
             # -------------------------------------------------------------
             # using LAI data
@@ -1047,7 +1062,8 @@ class ModelSetup(object):
                     elevation.append(self.multiplier(elevcol, average))
                 msg = "Reading vegetation heights"
                 logger.debug('{0} {1} {2}'.format(msg, i + 1, shiftcol + 7))
-                print_console(msg, True, i + 1, shiftcol + 7)
+                if verbose:
+                    print_console(msg, True, i + 1, shiftcol + 7)
 
             for i in range(len(keys)):
                 node = self.reach[keys[i]]
@@ -1102,7 +1118,8 @@ class ModelSetup(object):
 
                 msg = "Reading vegetation heights"
                 logger.debug('{0} {1} {2}'.format(msg, i + 1, shiftcol + 7))
-                print_console(msg, True, i + 1, shiftcol + 7)
+                if verbose:
+                    print_console(msg, True, i + 1, shiftcol + 7)
 
             for i in range(len(keys)):
                 node = self.reach[keys[i]]
@@ -1144,7 +1161,8 @@ class ModelSetup(object):
         for h in range(len(keys)):
             msg = "Building VegZones"
             logger.info('{0} {1} {2}'.format(msg, h + 1, len(keys)))
-            print_console(msg, True, h + 1, len(keys))
+            if verbose:
+                print_console(msg, True, h + 1, len(keys))
 
             node = self.reach[keys[h]]
             vts_total = 0  # View to sky value

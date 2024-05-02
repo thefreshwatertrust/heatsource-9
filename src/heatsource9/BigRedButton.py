@@ -63,7 +63,7 @@ class ModelControl(object):
     solution to the problem, don't hesitate to improve it.
     """
 
-    def __init__(self, model_dir, control_file, run_type=0):
+    def __init__(self, model_dir, control_file, run_type=0, verbose=True):
         """
         model_dir is the path to the directory where the
         control file is located.
@@ -92,11 +92,12 @@ class ModelControl(object):
                 "certain conditions described in the License.\n\n")
         msg += "Heat Source Version:  {0}\n".format(IniParams["version"])
 
-        print_console(msg)
+        if verbose:
+            print_console(msg)
         logger.info(msg)
 
         # Create a ModelSetup instance.
-        self.HS = ModelSetup(model_dir, control_file, run_type)
+        self.HS = ModelSetup(model_dir, control_file, run_type, verbose=verbose)
 
         # This is the list of StreamNode instances- we sort it in reverse
         # order because we number stream kilometer from the mouth to the
@@ -130,7 +131,7 @@ class ModelControl(object):
         # every so often.
         self.Output = O(self.HS.reach, IniParams["modelstart"], run_type)
 
-    def run(self):
+    def run(self, verbose=True):
         """Run the model one time
 
         Use the Chronos instance and list of StreamNodes to cycle
@@ -139,7 +140,8 @@ class ModelControl(object):
 
         msg = "Starting Simulation:  {0}".format(IniParams["name"])
         logger.info(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
 
         # Current time of the Chronos clock (i.e. this timestep)
         time = Chronos.TheTime
@@ -203,7 +205,8 @@ class ModelControl(object):
                 # This writes a line to the status bar.
                 msg = "Timesteps:"
                 logger.info('{0} {1} {2}'.format(msg, (ts) * hr, timesteps))
-                print_console(msg, True, (ts) * hr, timesteps)
+                if verbose:
+                    print_console(msg, True, (ts) * hr, timesteps)
 
                 # Call the Output class to update the textfiles. We call
                 # this every hour and store the data, then we write to 
@@ -251,7 +254,8 @@ class ModelControl(object):
         message += "Outputs: {0}\n\n".format(IniParams["outputdir"])
 
         logger.info(message)
-        print_console(message)
+        if verbose:
+            print_console(message)
         # raw_input('Press <ENTER> to close this console')
 
         for fh in self.Output.file_hs.values():
@@ -275,48 +279,51 @@ class ModelControl(object):
         """Call solar routines for each StreamNode"""
         [x.CalcHeat(time, H, M, S, JD, JDC, True) for x in self.reachlist]
 
-def run(model_dir, control_file):
+def run(model_dir, control_file, verbose=True):
     """Run full temperature model"""
     try:
-        HSP = ModelControl(model_dir, control_file, 0)
-        HSP.run()
+        HSP = ModelControl(model_dir, control_file, 0, verbose=verbose)
+        HSP.run(verbose=verbose)
         del HSP
     except:
         msg = "Error: {0}".format(traceback.format_exc())
         logging.error(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
 
 
-def run_solar(model_dir, control_file):
+def run_solar(model_dir, control_file, verbose=True):
     """Run solar routines only"""
     try:
-        HSP = ModelControl(model_dir, control_file, 1)
-        HSP.run()
+        HSP = ModelControl(model_dir, control_file, 1, verbose=verbose)
+        HSP.run(verbose=verbose)
     except:
         msg = "Error: {0}".format(traceback.format_exc())
         logging.error(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
 
 
-def run_hydraulics(model_dir, control_file):
+def run_hydraulics(model_dir, control_file, verbose=True):
     """Run hydraulics only"""
     try:
-        HSP = ModelControl(model_dir, control_file, 2)
-        HSP.run()
+        HSP = ModelControl(model_dir, control_file, 2, verbose=verbose)
+        HSP.run(verbose=verbose)
     except:
         msg = "Error: {0}".format(traceback.format_exc())
         logging.error(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
 
 
-def setup_cf(model_dir, control_file, use_timestamp=False, overwrite=False, **kwargs):
+def setup_cf(model_dir, control_file, use_timestamp=False, overwrite=False, verbose=True, **kwargs):
     """Write a blank control file or use **kwargs to parameterize it."""
     try:
         # create an input object
-        inputs = Inputs(model_dir, control_file)
+        inputs = Inputs(model_dir, control_file, verbose=verbose)
         
         # Write a blank control file
-        inputs.parameterize_cf(use_timestamp=use_timestamp, overwrite=overwrite, **kwargs)
+        inputs.parameterize_cf(use_timestamp=use_timestamp, overwrite=overwrite, verbose=verbose, **kwargs)
         
     except:
         msg = "Error: {0}".format(traceback.format_exc())
@@ -324,31 +331,32 @@ def setup_cf(model_dir, control_file, use_timestamp=False, overwrite=False, **kw
         print_console(msg)
 
 
-def setup_mi(model_dir, control_file, use_timestamp=False, overwrite=False):
+def setup_mi(model_dir, control_file, use_timestamp=False, overwrite=False, verbose=True):
     """Write blank input files. Control file must already be parameterized."""
     try:
         # create an input object
-        inputs = Inputs(model_dir, control_file)
+        inputs = Inputs(model_dir, control_file, verbose=verbose)
 
         # Control file must already be parameterized
-        inputs.import_control_file()
+        inputs.import_control_file(verbose=verbose)
         
         # Write blank input files,
-        inputs.setup(use_timestamp=use_timestamp, overwrite=overwrite)
+        inputs.setup(use_timestamp=use_timestamp, overwrite=overwrite, verbose=verbose)
 
     except:
         msg = "Error: {0}".format(traceback.format_exc())
         logging.error(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
 
-def setup_mi_dataframes(model_dir, control_file, use_timestamp=False):
+def setup_mi_dataframes(model_dir, control_file, use_timestamp=False, verbose=True):
     """Return blank input dataframes. Control file must already be parameterized."""
     try:
         # create an input object
-        inputs = Inputs(model_dir, control_file)
+        inputs = Inputs(model_dir, control_file, verbose=verbose)
 
         # Control file must already be parameterized
-        inputs.import_control_file()
+        inputs.import_control_file(verbose=verbose)
         
         # Write blank input files,
         dfs = inputs.setup_dataframes()

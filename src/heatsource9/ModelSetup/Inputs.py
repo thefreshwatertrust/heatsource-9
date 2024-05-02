@@ -44,7 +44,7 @@ class Inputs(object):
     Heat Source input files.
     """
 
-    def __init__(self, model_dir, control_file):
+    def __init__(self, model_dir, control_file, verbose=True):
         """
         model_dir: path to the directory where the
         control file is located.
@@ -208,11 +208,11 @@ class Inputs(object):
                 "SED_HYPORHEIC_THICKNESSS",
                 "HYPORHEIC_PERCENT", "POROSITY"]
 
-    def import_all(self, input_file="all"):
+    def import_all(self, input_file="all", verbose=True):
         """Returns all the input data"""
 
         #  read the control file and parameterize IniParams
-        self.import_control_file()
+        self.import_control_file(verbose=verbose)
 
         if input_file == "all":
             return (self.import_accretion(),
@@ -284,7 +284,7 @@ class Inputs(object):
 
         return data
 
-    def import_control_file(self):
+    def import_control_file(self, verbose=True):
         """Returns the control file"""
 
         if not exists(join(self.model_dir, self.control_file)):
@@ -295,7 +295,8 @@ class Inputs(object):
 
         msg = "Reading control file"
         logging.info(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
 
         cf_dict = self.control_file_dict()
         cf_list = self.read_to_list(self.model_dir,
@@ -586,7 +587,7 @@ class Inputs(object):
 
         return [list(i) for i in d4]
 
-    def parameterize_cf(self, overwrite=False, use_timestamp=False, **kwargs):
+    def parameterize_cf(self, overwrite=False, use_timestamp=False, verbose=True, **kwargs):
         """
         Writes the control file. Any keyword arguments
         passed will be parameterized into the control file.
@@ -600,12 +601,14 @@ class Inputs(object):
         if not overwrite and isfile(join(self.model_dir, cf_name)):
             msg = "HeatSource_Control.csv already exists. It will not be overwritten"
             logger.warning(msg)
-            print_console(msg)
+            if verbose:
+                print_console(msg)
             return
 
         msg = "Writing control file"
         logger.info(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
         cf_dict = self.control_file_dict()
         
         for k, v in list(kwargs.items()):
@@ -819,14 +822,15 @@ class Inputs(object):
 
         return dfs
 
-    def setup_csv(self, use_timestamp=True, overwrite=True):
+    def setup_csv(self, use_timestamp=True, overwrite=True, verbose=True):
         """
         Writes blank input csv files based on settings in the control file
         """
 
         msg = "Starting input file setup"
         logging.info(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
 
         # check if the input/output directories exist and 
         # create them if not
@@ -875,7 +879,8 @@ class Inputs(object):
 
         msg = "Writing empty csv files"
         logging.info(msg)
-        print_console(msg)
+        if verbose:
+            print_console(msg)
 
         if overwrite:
             # overwrite the inputs regardless if they exist or not
@@ -892,7 +897,8 @@ class Inputs(object):
                 self.write_to_csv(IniParams["inputdir"], lccodes_file,
                                   [[None]], self.headers_lccodes())
             else:
-                print_console("...Landcover input type = Values. land cover codes file not written")
+                if verbose:
+                    print_console("...Landcover input type = Values. land cover codes file not written")
 
             self.write_to_csv(IniParams["inputdir"], morph_file,
                               morphlist, self.headers_morph())
@@ -916,7 +922,8 @@ class Inputs(object):
                     self.write_to_csv(IniParams["inputdir"], lccodes_file,
                                       [[None]], self.headers_lccodes())
             else:
-                print_console("...Landcover input type = Values. land cover codes file not written")
+                if verbose:
+                    print_console("...Landcover input type = Values. land cover codes file not written")
 
             if not isfile(join(IniParams["inputdir"], morph_file)):
                 self.write_to_csv(IniParams["inputdir"], morph_file,
@@ -957,9 +964,11 @@ class Inputs(object):
                         self.write_to_csv(IniParams["inputdir"], trib_filename,
                                           inflowlist, self.headers_inflow())
         else:
-            print_console("Inflow Sites = 0, inflow file not written")
+            if verbose:
+                print_console("Inflow Sites = 0, inflow file not written")
 
-        print_console("Finished input file setup")
+        if verbose:
+            print_console("Finished input file setup")
 
     def datetime_string(self):
         """
