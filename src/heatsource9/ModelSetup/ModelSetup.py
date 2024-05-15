@@ -578,7 +578,7 @@ class ModelSetup(object):
                  "CHANNEL_ANGLE_Z", "MANNINGS_n",
                  "SED_THERMAL_CONDUCTIVITY",
                  "SED_THERMAL_DIFFUSIVITY",
-                 "SED_HYPORHEIC_THICKNESSS", "HYPORHEIC_PERCENT",
+                 "SED_HYPORHEIC_THICKNESS", "HYPORHEIC_PERCENT",
                  "POROSITY", "Q_cont", "d_cont"]
 
         flow = ["INFLOW", "TEMPERATURE", "OUTFLOW"]
@@ -596,7 +596,7 @@ class ModelSetup(object):
         # aves = ["LONGITUDE","LATITUDE","ELEVATION","GRADIENT",
         # "BOTTOM_WIDTH","CHANNEL_ANGLE_Z","MANNINGS_n",
         # "SED_THERMAL_CONDUCTIVITY",
-        # "SED_THERMAL_DIFFUSIVITY", "SED_HYPORHEIC_THICKNESSS",
+        # "SED_THERMAL_DIFFUSIVITY", "SED_HYPORHEIC_THICKNESS",
         # "POROSITY", "Q_cont","d_cont", "TEMPERATURE"]
 
         data = {}
