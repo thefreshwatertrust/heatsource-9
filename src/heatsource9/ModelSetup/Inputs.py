@@ -431,6 +431,10 @@ class Inputs(object):
                 or IniParams["dx"] < IniParams["longsample"]):
             raise ValueError("Distance step (dx) must be a multiple of the longitudinal stream sample distance")
 
+        if IniParams["lcdatainput"]=="Codes":
+            logger.warning("Canopy density in meteriorological file will be ignored; canopy densities from landcover codes table will be used")
+
+
     def control_file_dict(self, **kwargs):
         """
         Returns a dictionary of the control file lines
